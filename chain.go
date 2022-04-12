@@ -1,9 +1,5 @@
 package policy_enforcer
 
-import (
-	`github.com/iancoleman/strcase`
-)
-
 // AnyOf */
 func (p *Policy) AnyOf(any bool) (policy *Policy) {
 	policy = p.getInstance()
@@ -28,7 +24,7 @@ func (p *Policy) Rule(key string, conditions ...string) (policy *Policy) {
 		cn = append(cn, CleanCondition(con))
 	}
 	policy.Statement.Rules = append(policy.Statement.Rules, Rule{
-		Key:        strcase.ToSnake(key),
+		Key:        Key(key),
 		Conditions: cn,
 	})
 	return
@@ -37,6 +33,6 @@ func (p *Policy) Rule(key string, conditions ...string) (policy *Policy) {
 // FailMessage */
 func (p *Policy) FailMessage(key string, message string) (policy *Policy) {
 	policy = p.getInstance()
-	policy.Statement.Messages[strcase.ToSnake(key)] = message
+	policy.Statement.Messages[Key(key)] = message
 	return
 }
