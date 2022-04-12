@@ -1,4 +1,4 @@
-module github.com/Permify/policy-enforcer
+module github.com/Permify/policy-enforcer/v0.1
 
 go 1.17
 
