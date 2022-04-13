@@ -10,6 +10,6 @@ type Result struct {
 type RuleResult struct {
 	Allow   bool   `json:"allow"`
 	Key     string `json:"key"`
-	Message string `json:"message"`
+	Message string `json:"message,omitempty"`
 }
 

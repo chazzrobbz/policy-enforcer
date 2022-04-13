@@ -11,6 +11,7 @@ func CleanCondition(str string) string {
 	return strings.ReplaceAll(str, "'", "\"")
 }
 
+// Key */
 func Key(b string) string {
 	return strings.ReplaceAll(slug.Make(b), "-", "_")
 }
