@@ -17,7 +17,9 @@ func New() *Policy {
 		Statement: &Statement{
 			Package:  "app.permify",
 			Imports:  map[string]interface{}{},
+			Aliases:  map[string]string{},
 			Messages: map[string]string{},
+			Details:  map[string]map[string]interface{}{},
 			Rules:    Rules{},
 			AnyOf:    false,
 			Context:  context.Background(),
@@ -29,4 +31,3 @@ func New() *Policy {
 func (p *Policy) getInstance() *Policy {
 	return p
 }
-

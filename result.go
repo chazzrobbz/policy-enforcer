@@ -8,8 +8,8 @@ type Result struct {
 
 // RuleResult */
 type RuleResult struct {
-	Allow   bool   `json:"allow"`
-	Key     string `json:"key"`
-	Message string `json:"message,omitempty"`
+	Allow   bool                   `json:"allow"`
+	Key     string                 `json:"key"`
+	Message string                 `json:"message"`
+	Details map[string]interface{} `json:"details"`
 }
-

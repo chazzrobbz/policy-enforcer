@@ -16,6 +16,20 @@ func (p *Policy) Set(key string, value interface{}) (policy *Policy) {
 	return
 }
 
+// Alias */
+func (p *Policy) Alias(key string, value string) (policy *Policy) {
+	policy = p.getInstance()
+	policy.Statement.Aliases[Key(key)] = value
+	return
+}
+
+// Details */
+func (p *Policy) Details(key string, value map[string]interface{}) (policy *Policy) {
+	policy = p.getInstance()
+	policy.Statement.Details[Key(key)] = value
+	return
+}
+
 // Rule */
 func (p *Policy) Rule(key string, conditions ...string) (policy *Policy) {
 	policy = p.getInstance()

@@ -28,16 +28,26 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	var results []RuleResult
 	for _, rule := range Rules(p.Statement.Rules) {
 		_, ok := r[rule.Key].(bool)
+		var key string
+		alias := p.Statement.Aliases[rule.Key]
+		if alias != "" {
+			key = alias
+		} else {
+			key = rule.Key
+		}
 		if ok {
 			results = append(results, RuleResult{
 				Allow:   true,
-				Key:     rule.Key,
+				Key:     key,
+				Message: p.Statement.Messages[rule.Key],
+				Details: p.Statement.Details[rule.Key],
 			})
 		} else {
 			results = append(results, RuleResult{
 				Allow:   false,
-				Key:     rule.Key,
+				Key:     key,
 				Message: p.Statement.Messages[rule.Key],
+				Details: p.Statement.Details[rule.Key],
 			})
 		}
 	}
