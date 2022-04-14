@@ -39,7 +39,7 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 			results = append(results, RuleResult{
 				Allow:   true,
 				Key:     key,
-				Message: p.Statement.Messages[rule.Key],
+				Message: "",
 				Details: p.Statement.Details[rule.Key],
 			})
 		} else {
