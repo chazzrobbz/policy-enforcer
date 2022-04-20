@@ -1,11 +1,44 @@
 package policy_enforcer
 
 import (
-	"github.com/stretchr/testify/assert"
+	`fmt`
+	`github.com/stretchr/testify/assert`
 	`testing`
 )
 
-func TestIsAuthorized_AnyOf(t *testing.T) {
+type User struct {
+	Name   string   `json:"name"`
+	Tenure int      `json:"tenure"`
+	Roles  []string `json:"roles"`
+}
+
+func TestIsAuthorized_1(t *testing.T) {
+	var user = User{
+		Name:   "tolga",
+		Tenure: 9,
+		Roles:  []string{"admin"},
+	}
+
+	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
+	var isSenior = NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+
+	policy := New()
+	policy.Set("user", user)
+
+	policy.Option(false, isAdmin).Option(false, isSenior, isManager)
+
+	result, err := policy.IsAuthorized()
+
+	fmt.Println(result)
+	fmt.Println("=-=-=-=-=-=")
+	Pre(result)
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, result.Allow, true)
+}
+
+func TestIsAuthorized_2(t *testing.T) {
 	var user = struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
@@ -13,25 +46,51 @@ func TestIsAuthorized_AnyOf(t *testing.T) {
 	}{
 		Name:   "tolga",
 		Tenure: 9,
-		Roles:  []string{"admin"},
+		Roles:  []string{"admin", "manager"},
 	}
 
 	policy := New()
 	policy.Set("user", user)
-	policy.AnyOf(true)
 
-	policy.Rule("is admin", "'admin' in user.roles")
-	policy.FailMessage("is admin", "user is not an admin")
+	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	var isSeniorManager = NewRule("user.tenure > 8", "'manager' in user.roles").SetFailMessage("user is not senior manager")
 
-	policy.Rule("is senior manager", "user.tenure > 8", "'manager' in user.roles")
-	policy.FailMessage("is senior manager", "user is not senior manager")
+	policy.Option(false, isAdmin).Option(false, isSeniorManager)
 
 	result, err := policy.IsAuthorized()
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result.Allow, true)
 }
 
-func TestIsNotAuthorized_AnyOf(t *testing.T) {
+
+func TestIsNotAuthorized_1(t *testing.T) {
+	var user = struct {
+		Name   string   `json:"name"`
+		Tenure int      `json:"tenure"`
+		Roles  []string `json:"roles"`
+	}{
+		Name:   "tolga",
+		Tenure: 7,
+		Roles:  []string{"manager"},
+	}
+
+	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	var isSeniorManager = NewRule("user.tenure > 8", "'manager' in user.roles").SetFailMessage("user is not senior manager")
+
+	policy := New()
+	policy.Set("user", user)
+	policy.Option(false, isAdmin).Option(false, isSeniorManager)
+
+	fmt.Println(policy.ToRego())
+
+	result, err := policy.IsAuthorized()
+
+	fmt.Println(result)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, result.Allow, false)
+}
+
+func TestIsNotAuthorized_2(t *testing.T) {
 	var user = struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
@@ -44,72 +103,19 @@ func TestIsNotAuthorized_AnyOf(t *testing.T) {
 
 	policy := New()
 	policy.Set("user", user)
-	policy.AnyOf(true)
 
-	policy.Rule("is admin", "'admin' in user.roles")
-	policy.FailMessage("is admin", "user is not an admin")
+	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	var isSenior = NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 
-	policy.Rule("is senior manager", "user.tenure > 8", "'manager' in user.roles")
-	policy.FailMessage("is senior manager", "user is not senior manager")
-
-	result, err := policy.IsAuthorized()
-	assert.Equal(t, err, nil)
-	assert.Equal(t, result.Allow, false)
-}
-
-func TestIsAuthorized(t *testing.T) {
-	var user = struct {
-		Name   string   `json:"name"`
-		Tenure int      `json:"tenure"`
-		Roles  []string `json:"roles"`
-	}{
-		Name:   "tolga",
-		Tenure: 9,
-		Roles:  []string{"admin", "manager"},
-	}
-
-	policy := New()
-	policy.Set("user", user)
-	policy.AnyOf(false)
-
-	policy.Rule("is admin", "'admin' in user.roles")
-	policy.FailMessage("is admin", "user is not an admin")
-
-	policy.Rule("is senior manager", "user.tenure > 8", "'manager' in user.roles")
-	policy.FailMessage("is senior manager", "user is not senior manager")
-
-	result, err := policy.IsAuthorized()
-	assert.Equal(t, err, nil)
-	assert.Equal(t, result.Allow, true)
-}
-
-func TestIsNotAuthorized(t *testing.T) {
-	var user = struct {
-		Name   string   `json:"name"`
-		Tenure int      `json:"tenure"`
-		Roles  []string `json:"roles"`
-	}{
-		Name:   "tolga",
-		Tenure: 7,
-		Roles:  []string{"admin", "manager"},
-	}
-
-	policy := New()
-	policy.Set("user", user)
-	policy.AnyOf(false)
-
-	policy.Rule("is admin", "'admin' in user.roles")
-	policy.FailMessage("is admin", "user is not an admin")
-
-	policy.Rule("is senior manager", "user.tenure > 8", "'manager' in user.roles")
-	policy.FailMessage("is senior manager", "user is not senior manager")
+	policy.Option(false, isAdmin).Option(false, isSenior, isManager)
 
 	result, err := policy.IsAuthorized()
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result.Allow, false)
 }
 
-func TestIsAuthorizedWithResource_AnyOf(t *testing.T) {
+func TestIsAuthorizedWithResource_1(t *testing.T) {
 	var user = struct {
 		ID     int      `json:"id"`
 		Name   string   `json:"name"`
@@ -130,23 +136,19 @@ func TestIsAuthorizedWithResource_AnyOf(t *testing.T) {
 		OwnerID: 1,
 	}
 
+	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	var isSenior = NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+	var isResourceOwner = NewRule("resource.owner_id == user.id").SetFailMessage("user is not owner of the resource")
+
 	policy := New()
 	policy.Set("user", user)
 	policy.Set("resource", resource)
-	policy.AnyOf(true)
 
-	policy.Rule("is admin", "'admin' in user.roles")
-	policy.FailMessage("is admin", "user is not an admin")
-
-	policy.Rule("is senior manager", "user.tenure > 8", "'manager' in user.roles")
-	policy.FailMessage("is senior manager", "user is not senior manager")
-
-	policy.Rule("is resource owner", "resource.owner_id == user.id")
-	policy.FailMessage("is resource owner", "user is not owner of the resource")
+	policy.Option(false, isAdmin).Option(false, isSenior, isManager).Option(false, isResourceOwner)
 
 	result, err := policy.IsAuthorized()
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result.Allow, true)
 }
-

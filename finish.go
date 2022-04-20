@@ -6,7 +6,8 @@ import (
 	`strings`
 )
 
-// IsAuthorized */
+// IsAuthorized It creates a decision about whether the inputs you give comply with the rules you write and a result about the reason
+// @return Result, error
 func (p *Policy) IsAuthorized() (result Result, err error) {
 	var query rego.PreparedEvalQuery
 	query, err = rego.New(
@@ -26,28 +27,19 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	r := resultSet[0].Bindings["r"].(map[string]interface{})
 
 	var results []RuleResult
-	for _, rule := range Rules(p.Statement.Rules) {
+	for key, rule := range p.Statement.Rules {
 		_, ok := r[rule.Key].(bool)
-		var key string
-		alias := p.Statement.Aliases[rule.Key]
-		if alias != "" {
-			key = alias
-		} else {
-			key = rule.Key
-		}
 		if ok {
 			results = append(results, RuleResult{
 				Allow:   true,
 				Key:     key,
 				Message: "",
-				Details: p.Statement.Details[rule.Key],
 			})
 		} else {
 			results = append(results, RuleResult{
 				Allow:   false,
 				Key:     key,
-				Message: p.Statement.Messages[rule.Key],
-				Details: p.Statement.Details[rule.Key],
+				Message: rule.FailMessage.Error(),
 			})
 		}
 	}
@@ -58,19 +50,32 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	}, err
 }
 
-// ToRego */
+// ToRego Returns the rules you create programmatically as strings in rego language
+// @return string
 func (p *Policy) ToRego() string {
-	var rv string
-	if p.Statement.AnyOf {
-		for _, name := range Rules(p.Statement.Rules).Keys() {
-			rv += fmt.Sprintf(allowTemplate, name)
+	var raw string
+
+	for _, option := range p.Statement.Options {
+		if option.AnyOf {
+			for _, name := range Rules(option.Rules).Keys() {
+				raw += fmt.Sprintf(allowTemplate, name)
+			}
+		} else {
+			if Rules(option.Rules).Len() > 0 {
+				raw += fmt.Sprintf(allowTemplate, strings.Join(Rules(option.Rules).Keys(), "\n"))
+			}
 		}
-	} else {
-		rv = fmt.Sprintf(allowTemplate, strings.Join(Rules(p.Statement.Rules).Keys(), "\n"))
 	}
+
 	var imps string
 	for key, _ := range p.Statement.Imports {
 		imps += fmt.Sprintf("import input.%s as %s\n", key, key)
 	}
-	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, rv, strings.Join(Rules(p.Statement.Rules).Raws(), ""))
+
+	var rules []Rule
+	for _, rule := range p.Statement.Rules {
+		rules = append(rules, rule)
+	}
+
+	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, raw, strings.Join(Rules(rules).Raws(), ""))
 }

@@ -1,17 +1,55 @@
 package policy_enforcer
 
 import (
+	`errors`
 	`fmt`
 	`strings`
 )
 
-// Rule */
 type Rule struct {
-	Key       string
-	Conditions []string
+	Key         string
+	FailMessage error
+	Conditions  []string
 }
 
-// raw */
+// NewRule creates a new rule
+// @param string
+// @param ...string
+// @return Rule
+func NewRule(conditions ...string) Rule {
+	var cn []string
+	for _, con := range conditions {
+		cn = append(cn, CleanCondition(con))
+	}
+	return Rule{
+		Key:        GenerateLowerCaseRandomString(20),
+		Conditions: cn,
+	}
+}
+
+// SetFailMessage set the message that it displays when the rule you have created return false
+// @param string
+// @return Rule
+func (r Rule) SetFailMessage(message string) Rule {
+	return Rule{
+		Key:         r.Key,
+		Conditions:  r.Conditions,
+		FailMessage: errors.New(message),
+	}
+}
+
+// SetKey set the key
+// @param string
+// @return Rule
+func (r Rule) SetKey(key string) Rule {
+	return Rule{
+		Key:         Key(key),
+		Conditions:  r.Conditions,
+		FailMessage: r.FailMessage,
+	}
+}
+
+// raw converts rule to string according to rego
 func (r Rule) raw() string {
 	return fmt.Sprintf(ruleTemplate, r.Key, strings.Join(r.Conditions, "\n"))
 }

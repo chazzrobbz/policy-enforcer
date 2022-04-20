@@ -1,13 +1,9 @@
 package policy_enforcer
 
-// AnyOf */
-func (p *Policy) AnyOf(any bool) (policy *Policy) {
-	policy = p.getInstance()
-	policy.Statement.AnyOf = any
-	return
-}
-
-// Set */
+// Set loads the object into the statement.
+// @param string
+// @param interface{}
+// @return *Policy
 func (p *Policy) Set(key string, value interface{}) (policy *Policy) {
 	policy = p.getInstance()
 	var mp map[string]interface{}
@@ -16,37 +12,18 @@ func (p *Policy) Set(key string, value interface{}) (policy *Policy) {
 	return
 }
 
-// Alias */
-func (p *Policy) Alias(key string, value string) (policy *Policy) {
+// Option makes it easy for you to group rules and relate them to and,or
+// @param bool
+// @param ...Rule
+// @return *Policy
+func (p *Policy) Option(anyOf bool, rules ...Rule) (policy *Policy) {
 	policy = p.getInstance()
-	policy.Statement.Aliases[Key(key)] = value
-	return
-}
-
-// Details */
-func (p *Policy) Details(key string, value map[string]interface{}) (policy *Policy) {
-	policy = p.getInstance()
-	policy.Statement.Details[Key(key)] = value
-	return
-}
-
-// Rule */
-func (p *Policy) Rule(key string, conditions ...string) (policy *Policy) {
-	policy = p.getInstance()
-	var cn []string
-	for _, con := range conditions {
-		cn = append(cn, CleanCondition(con))
-	}
-	policy.Statement.Rules = append(policy.Statement.Rules, Rule{
-		Key:        Key(key),
-		Conditions: cn,
+	policy.Statement.Options = append(policy.Statement.Options, Option{
+		AnyOf: anyOf,
+		Rules: rules,
 	})
-	return
-}
-
-// FailMessage */
-func (p *Policy) FailMessage(key string, message string) (policy *Policy) {
-	policy = p.getInstance()
-	policy.Statement.Messages[Key(key)] = message
+	for _, rule := range rules {
+		policy.Statement.Rules[rule.Key] = rule
+	}
 	return
 }
