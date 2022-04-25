@@ -1,6 +1,5 @@
 package policy_enforcer
 
-
 //// ToPartials Returns the rules you create programmatically as strings in rego language
 //// @return string
 //func (p *Policy) ToPartials() (result []string, err error) {

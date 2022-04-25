@@ -83,7 +83,7 @@ result, err := policy.IsAuthorized()
 }
 ```
 
-## 🚲 Multiple Resource Response
+## 🔗 Multiple Resource Response
 
 You can check authorization of multiple resources at once.
 
@@ -136,8 +136,8 @@ var r, err = policy.IsAuthorized()
         {
             Allow: true, // its true because user is admin
             Meta: {
-                "type": "posts",
                  "id": "1"
+				 "type": "posts",
             }
         },
         {
@@ -205,8 +205,8 @@ var r, err = policy.IsAuthorized()
         {
             Allow: true, // its true because user is owner of the this resource
             Meta: {
+		        "id": "1"
                 "type": "posts",
-                 "id": "1"
             }
         },
         {

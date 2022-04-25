@@ -13,7 +13,7 @@ func (p *Policy) Set(key string, value interface{}) (policy *Policy) {
 	return
 }
 
-// SetUser loads the object into the statement.
+// SetUser loads the user into the statement.
 // @param string
 // @param interface{}
 // @return *Policy
@@ -27,7 +27,7 @@ func (p *Policy) SetUser(user User) (policy *Policy) {
 	return
 }
 
-// SetResources loads the object into the statement.
+// SetResources loads the resources into the statement.
 // @param string
 // @param interface{}
 // @return *Policy
@@ -41,7 +41,7 @@ func (p *Policy) SetResources(resources ...Resource) (policy *Policy) {
 	return
 }
 
-// Option makes it easy for you to group rules and relate them to and,or
+// Option makes it easy for you to group rules and relate them to and
 // @param bool
 // @param ...Rule
 // @return *Policy

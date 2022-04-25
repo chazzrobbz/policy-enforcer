@@ -1,10 +1,11 @@
 package policy_enforcer
 
 import (
-	`encoding/json`
-	`github.com/gosimple/slug`
-	`math/rand`
-	`strings`
+	"encoding/json"
+	"math/rand"
+	"strings"
+
+	"github.com/gosimple/slug"
 )
 
 // CleanCondition weeds out the places where there might be errors when creating conditions
@@ -21,12 +22,11 @@ func Key(b string) string {
 	return strings.ReplaceAll(slug.Make(b), "-", "_")
 }
 
-
 // GenerateLowerCaseRandomString its generate lowercase random string
 // @param int
 // @return string
 func GenerateLowerCaseRandomString(n int) string {
-	var chars = []rune("abcdefghijklmnopqrstuvwxyz")
+	chars := []rune("abcdefghijklmnopqrstuvwxyz")
 	str := make([]rune, n)
 	for i := range str {
 		str[i] = chars[rand.Intn(len(chars))]

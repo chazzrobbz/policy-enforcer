@@ -6,4 +6,3 @@ const (
 	MULTIPLE = "multiple"
 	SINGLE   = "single"
 )
-

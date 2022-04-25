@@ -1,9 +1,9 @@
 package policy_enforcer
 
 import (
-	`errors`
-	`fmt`
-	`strings`
+	"errors"
+	"fmt"
+	"strings"
 )
 
 type Rule struct {

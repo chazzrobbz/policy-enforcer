@@ -1,10 +1,11 @@
 package policy_enforcer
 
 import (
-	`encoding/json`
-	`fmt`
-	`github.com/open-policy-agent/opa/rego`
-	`strings`
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/open-policy-agent/opa/rego"
 )
 
 // IsAuthorized It creates a decision about whether the inputs you give comply with the rules you write and a result about the reason
@@ -67,11 +68,11 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 		}
 
 		return Result{
-			Allows:  Compare(p.Statement.Resources, allowedResources),
+			Allows:  compare(p.Statement.Resources, allowedResources),
 			Details: results,
 		}, err
 	} else {
-		var allow = Allow{
+		allow := Allow{
 			Allow: true,
 		}
 
@@ -108,4 +109,32 @@ func (p *Policy) ToRego() string {
 	}
 
 	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, raw, strings.Join(Rules(rules).Evacuations(), ""))
+}
+
+// Compare */
+func compare(allResources []Resource, allowedResources []Resource) (allows []Allow) {
+	allowedMap := map[string]bool{}
+	for _, allowedResource := range allowedResources {
+		allowedMap[allowedResource.Type+":"+allowedResource.ID] = true
+	}
+	for _, resource := range allResources {
+		if allowedMap[resource.Type+":"+resource.ID] {
+			allows = append(allows, Allow{
+				Allow: true,
+				Meta: map[string]interface{}{
+					"id":   resource.ID,
+					"type": resource.Type,
+				},
+			})
+		} else {
+			allows = append(allows, Allow{
+				Allow: false,
+				Meta: map[string]interface{}{
+					"id":   resource.ID,
+					"type": resource.Type,
+				},
+			})
+		}
+	}
+	return
 }

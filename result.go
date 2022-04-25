@@ -6,6 +6,7 @@ type Result struct {
 	Details []RuleResult `json:"details"`
 }
 
+// Allow */
 type Allow struct {
 	Allow bool                   `json:"allow"`
 	Meta  map[string]interface{} `json:"meta"`
@@ -18,29 +19,3 @@ type RuleResult struct {
 	Message string `json:"message"`
 }
 
-func Compare(allResources []Resource, allowedResources []Resource) (allows []Allow) {
-	var allowedMap = map[string]bool{}
-	for _, allowedResource := range allowedResources {
-		allowedMap[allowedResource.Type+":"+allowedResource.ID] = true
-	}
-	for _, resource := range allResources {
-		if allowedMap[resource.Type+":"+resource.ID] {
-			allows = append(allows, Allow{
-				Allow: true,
-				Meta: map[string]interface{}{
-					"id":   resource.ID,
-					"type": resource.Type,
-				},
-			})
-		} else {
-			allows = append(allows, Allow{
-				Allow: false,
-				Meta: map[string]interface{}{
-					"id":   resource.ID,
-					"type": resource.Type,
-				},
-			})
-		}
-	}
-	return
-}
