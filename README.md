@@ -6,8 +6,22 @@
 
 <p align="center">Represent your rego rules programmatically.</p>
 
-<p align="center">Rego is the policy language for defining rules that are evaluated by the OPA (Open Policy Agent) engine.</p>
+<p align="center"><a href="https://pkg.go.dev/github.com/Permify/policy-enforcer?tab=doc" 
+target="_blank"></a><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" />&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" />&nbsp;&nbsp;<img src="https://img.shields.io/github/license/Permify/policy-enforcer?style=for-the-badge" alt="license" /></p>
 
+---
+
+Policy enforcer is a open source tool that allows you to easily create complex rego.
+
+> Rego is the policy language for defining rules that are evaluated by the OPA (Open Policy Agent) engine.
+
+## Features
+
+- Generate your complex authorization easily with code.
+- Export the rego you created with the code.
+- Make decisions about multiple resources from one policy.
+- Get the details of the decisions made.
+- Add custom messages and handle decision messages.
 
 ## 👇 Setup
 
@@ -40,17 +54,24 @@ var user = User{
     },
 }
 
+blog := map[string]interface{}{
+    "id":     1,
+    "status": "PUBLIC",
+}
+
 var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
 var isSenior = enforcer.NewRule("user.tenure > 8").SetFailMessage("user is not senior")
 var isManager = enforcer.NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+var isPublic = enforcer.NewRule("blog.status == 'PUBLIC'").SetFailMessage("blog is not public")
 
 policy := enforcer.New()
     
 // set user object
 policy.Set("user", user)
+policy.Set("blog", blog)
 
-// its means the user must be either an admin or a senior manager
-policy.Option(isAdmin).Option(isSenior, isManager)
+// its means the user must be either an admin or a senior manager or blog is public
+policy.Option(isAdmin).Option(isSenior, isManager).Option(isPublic)
 
 result, err := policy.IsAuthorized()
 ```
@@ -73,6 +94,11 @@ result, err := policy.IsAuthorized()
             Allow: true,  // is senior result
             Key: "tcuaxhxkqfdafplsjfbc", // if the key is not set it is created automatically
             Message: ""
+        },
+        {
+            Allow: true, // is public result
+            Key: (string) (len=20) "lgtemapezqleqyhyzryw",
+            Message: (string) ""
         },
         {
             Allow: false, // is manager result
