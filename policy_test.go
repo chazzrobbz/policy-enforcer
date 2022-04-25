@@ -1,27 +1,35 @@
 package policy_enforcer
 
 import (
-	`github.com/stretchr/testify/assert`
-	`testing`
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test1(t *testing.T) {
-	var user = User{
-		ID: "tolga",
+	user := User{
+		ID: "1",
 		Attributes: map[string]interface{}{
-			"tenure": 8,
+			"tenure": 3,
 		},
 		Roles: []string{"admin"},
 	}
 
-	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
-	var isSenior = NewRule("user.attributes.tenure > 8").SetFailMessage("user is not senior")
-	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+	blog := map[string]interface{}{
+		"id":     1,
+		"status": "PUBLIC",
+	}
+
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
+	isSenior := NewRule("user.attributes.tenure > 8").SetFailMessage("user is not senior")
+	isManager := NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+	isPublic := NewRule("blog.status == 'PUBLIC'").SetFailMessage("blog is not public")
 
 	policy := New()
 	policy.SetUser(user)
+	policy.Set("blog", blog)
 
-	policy.Option(isAdmin).Option(isSenior, isManager)
+	policy.Option(isAdmin).Option(isSenior, isManager).Option(isPublic)
 
 	result, err := policy.IsAuthorized()
 	assert.Equal(t, err, nil)
@@ -57,19 +65,20 @@ func Test2(t *testing.T) {
 		},
 	)
 
-	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
-	var isResourceOwner = NewRule("resource.attributes.owner_id == '1'")
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isResourceOwner := NewRule("resource.attributes.owner_id == '1'")
 
 	policy.Option(isAdmin).Option(isResourceOwner)
 
-	var r, err = policy.IsAuthorized()
+	r, err := policy.IsAuthorized()
+
 	assert.Equal(t, err, nil)
 	assert.Equal(t, r.Allows[0].Allow, true)
 	assert.Equal(t, r.Allows[1].Allow, false)
 }
 
 func Test3(t *testing.T) {
-	var user = struct {
+	user := struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
 		Roles  []string `json:"roles"`
@@ -79,8 +88,8 @@ func Test3(t *testing.T) {
 		Roles:  []string{"manager"},
 	}
 
-	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
-	var isSeniorManager = NewRule("user.tenure > 8", "'manager' in user.roles").SetFailMessage("user is not senior manager")
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isSeniorManager := NewRule("user.tenure > 8", "'manager' in user.roles").SetFailMessage("user is not senior manager")
 
 	policy := New()
 	policy.Set("user", user)
@@ -93,7 +102,7 @@ func Test3(t *testing.T) {
 }
 
 func Test4(t *testing.T) {
-	var user = struct {
+	user := struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
 		Roles  []string `json:"roles"`
@@ -106,9 +115,9 @@ func Test4(t *testing.T) {
 	policy := New()
 	policy.Set("user", user)
 
-	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
-	var isSenior = NewRule("user.tenure > 8").SetFailMessage("user is not senior")
-	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isSenior := NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+	isManager := NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 
 	policy.Option(isAdmin).Option(isSenior, isManager)
 
@@ -118,7 +127,7 @@ func Test4(t *testing.T) {
 }
 
 func Test5(t *testing.T) {
-	var user = struct {
+	user := struct {
 		ID     int      `json:"id"`
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
@@ -130,7 +139,7 @@ func Test5(t *testing.T) {
 		Roles:  []string{"admin"},
 	}
 
-	var post = struct {
+	post := struct {
 		ID      string `json:"id"`
 		OwnerID int    `json:"owner_id"`
 	}{
@@ -138,10 +147,10 @@ func Test5(t *testing.T) {
 		OwnerID: 1,
 	}
 
-	var isAdmin = NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
-	var isSenior = NewRule("user.tenure > 8").SetFailMessage("user is not senior")
-	var isManager = NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
-	var isResourceOwner = NewRule("post.owner_id == user.id").SetFailMessage("user is not owner of the post")
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isSenior := NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+	isManager := NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+	isResourceOwner := NewRule("post.owner_id == user.id").SetFailMessage("user is not owner of the post")
 
 	policy := New()
 	policy.Set("user", user)
