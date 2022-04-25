@@ -15,12 +15,13 @@ func New() *Policy {
 	return &Policy{
 		Error: nil,
 		Statement: &Statement{
-			Package: "app.permify",
-			Imports: map[string]interface{}{},
-			Options: []Option{},
-			Rules:   map[string]Rule{},
-			Storage: nil,
-			Context: context.Background(),
+			Package:  "app.permify",
+			Imports:  []string{},
+			Inputs:   map[string]interface{}{},
+			Options:  []Option{},
+			Rules:    map[string]Rule{},
+			Strategy: SINGLE,
+			Context:  context.Background(),
 		},
 	}
 }

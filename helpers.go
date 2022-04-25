@@ -46,3 +46,16 @@ func ToMap(u interface{}) (mp map[string]interface{}, err error) {
 	err = json.Unmarshal(data, &mp)
 	return
 }
+
+// ToMapArray turns objects into map array
+// @param interface{}
+// @return []map[string]interface{}, error
+func ToMapArray(u interface{}) (mp []map[string]interface{}, err error) {
+	var data []byte
+	data, err = json.Marshal(u)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(data, &mp)
+	return
+}

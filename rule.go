@@ -7,9 +7,10 @@ import (
 )
 
 type Rule struct {
-	Key         string
-	FailMessage error
-	Conditions  []string
+	Key              string
+	ContainsResource bool
+	FailMessage      error
+	Conditions       []string
 }
 
 // NewRule creates a new rule
@@ -18,12 +19,16 @@ type Rule struct {
 // @return Rule
 func NewRule(conditions ...string) Rule {
 	var cn []string
+	containsResource := false
 	for _, con := range conditions {
-		cn = append(cn, CleanCondition(con))
+		condition := CleanCondition(con)
+		containsResource = strings.Contains(condition, "resource.")
+		cn = append(cn, condition)
 	}
 	return Rule{
-		Key:        GenerateLowerCaseRandomString(20),
-		Conditions: cn,
+		Key:              GenerateLowerCaseRandomString(20),
+		ContainsResource: containsResource,
+		Conditions:       cn,
 	}
 }
 
@@ -49,9 +54,28 @@ func (r Rule) SetKey(key string) Rule {
 	}
 }
 
-// raw converts rule to string according to rego
-func (r Rule) raw() string {
-	return fmt.Sprintf(ruleTemplate, r.Key, strings.Join(r.Conditions, "\n"))
+// GetTitle
+// @param string
+// @return string
+func (r Rule) GetTitle() string {
+	if r.ContainsResource {
+		return fmt.Sprintf("%s(resource)", r.Key)
+	}
+	return r.Key
+}
+
+// GetTemplate
+// @param string
+// @return string
+func (r Rule) GetTemplate() string {
+	return ruleTemplate
+}
+
+// Evict
+// @param string
+// @return string
+func (r Rule) Evict() string {
+	return fmt.Sprintf(r.GetTemplate(), r.GetTitle(), strings.Join(r.Conditions, "\n"))
 }
 
 // Collection
@@ -71,22 +95,22 @@ func (c Rules) Len() (length int64) {
 	return int64(len(c))
 }
 
-// Keys returns an array of the rule array's keys.
+// Titles returns an array of the rule array's keys.
 // @return []String
-func (c Rules) Keys() (keys []string) {
+func (c Rules) Titles() (keys []string) {
 	keys = []string{}
 	for _, o := range c {
-		keys = append(keys, o.Key)
+		keys = append(keys, o.GetTitle())
 	}
 	return
 }
 
-// Raws returns an array of the rule array's raws.
+// Evacuations returns an array of the rule array's raws.
 // @return []String
-func (c Rules) Raws() (raws []string) {
-	raws = []string{}
+func (c Rules) Evacuations() (evacuations []string) {
+	evacuations = []string{}
 	for _, o := range c {
-		raws = append(raws, o.raw())
+		evacuations = append(evacuations, o.Evict())
 	}
 	return
 }

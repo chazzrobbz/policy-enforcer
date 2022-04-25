@@ -1,6 +1,7 @@
 package policy_enforcer
 
 import (
+	`encoding/json`
 	`fmt`
 	`github.com/open-policy-agent/opa/rego`
 	`strings`
@@ -11,43 +12,78 @@ import (
 func (p *Policy) IsAuthorized() (result Result, err error) {
 	var query rego.PreparedEvalQuery
 	query, err = rego.New(
-		rego.Query(fmt.Sprintf("r = data.app.permify")),
+		rego.Query(fmt.Sprintf("r = data.%s", p.Statement.Package)),
 		rego.Module("permify.rego", p.ToRego()),
 	).PrepareForEval(p.Statement.Context)
 	if err != nil {
+		p.Error = err
 		return
 	}
 
 	var resultSet rego.ResultSet
-	resultSet, err = query.Eval(p.Statement.Context, rego.EvalInput(p.Statement.Imports))
+	resultSet, err = query.Eval(p.Statement.Context, rego.EvalInput(p.Statement.Inputs))
 	if err != nil {
+		p.Error = err
 		return
 	}
 
 	r := resultSet[0].Bindings["r"].(map[string]interface{})
 
 	var results []RuleResult
+
 	for key, rule := range p.Statement.Rules {
-		_, ok := r[rule.Key].(bool)
-		if ok {
-			results = append(results, RuleResult{
-				Allow:   true,
-				Key:     key,
-				Message: "",
-			})
-		} else {
-			results = append(results, RuleResult{
-				Allow:   false,
-				Key:     key,
-				Message: rule.FailMessage.Error(),
-			})
+		if !rule.ContainsResource {
+			_, ok := r[rule.Key].(bool)
+			if ok {
+				results = append(results, RuleResult{
+					Allow:   true,
+					Key:     key,
+					Message: "",
+				})
+			} else {
+				results = append(results, RuleResult{
+					Allow:   false,
+					Key:     key,
+					Message: rule.FailMessage.Error(),
+				})
+			}
 		}
 	}
 
-	return Result{
-		Allow:   r["allow"].(bool),
-		Details: results,
-	}, err
+	if p.Statement.Strategy == MULTIPLE {
+		var allowedResources []Resource
+
+		var data []byte
+		data, err = json.Marshal(r["allows"])
+		if err != nil {
+			p.Error = err
+			return
+		}
+
+		err = json.Unmarshal(data, &allowedResources)
+		if err != nil {
+			p.Error = err
+			return
+		}
+
+		return Result{
+			Allows:  Compare(p.Statement.Resources, allowedResources),
+			Details: results,
+		}, err
+	} else {
+		var allow = Allow{
+			Allow: true,
+		}
+
+		if len(r["allows"].([]interface{})) == 0 {
+			allow.Allow = false
+		}
+
+		return Result{
+			Allows:  []Allow{allow},
+			Details: results,
+		}, err
+	}
 }
 
 // ToRego Returns the rules you create programmatically as strings in rego language
@@ -56,20 +92,14 @@ func (p *Policy) ToRego() string {
 	var raw string
 
 	for _, option := range p.Statement.Options {
-		if option.AnyOf {
-			for _, name := range Rules(option.Rules).Keys() {
-				raw += fmt.Sprintf(allowTemplate, name)
-			}
-		} else {
-			if Rules(option.Rules).Len() > 0 {
-				raw += fmt.Sprintf(allowTemplate, strings.Join(Rules(option.Rules).Keys(), "\n"))
-			}
+		if Rules(option.Rules).Len() > 0 {
+			raw += fmt.Sprintf(option.GetTemplate(p.Statement.Strategy), strings.Join(Rules(option.Rules).Titles(), "\n"))
 		}
 	}
 
 	var imps string
-	for key, _ := range p.Statement.Imports {
-		imps += fmt.Sprintf("import input.%s as %s\n", key, key)
+	for _, imp := range p.Statement.Imports {
+		imps += fmt.Sprintf("import input.%s as %s\n", imp, imp)
 	}
 
 	var rules []Rule
@@ -77,5 +107,5 @@ func (p *Policy) ToRego() string {
 		rules = append(rules, rule)
 	}
 
-	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, raw, strings.Join(Rules(rules).Raws(), ""))
+	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, raw, strings.Join(Rules(rules).Evacuations(), ""))
 }

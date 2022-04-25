@@ -2,7 +2,6 @@ package policy_enforcer
 
 // Option makes it easy for you to group rules and relate them to and,or
 type Option struct {
-	AnyOf bool
 	Rules []Rule
 }
 
@@ -10,9 +9,22 @@ type Option struct {
 // @param bool
 // @param ...Rule
 // @return Option
-func NewOption(anyOf bool, rules ...Rule) Option {
+func NewOption(rules ...Rule) Option {
 	return Option{
-		AnyOf: anyOf,
 		Rules: rules,
+	}
+}
+
+// GetTemplate
+// @param string
+// @return string
+func (r Option) GetTemplate(s Strategy) string {
+	switch s {
+	case MULTIPLE:
+		return allowWithResourceTemplate
+	case SINGLE:
+		return allowTemplate
+	default:
+		return allowTemplate
 	}
 }

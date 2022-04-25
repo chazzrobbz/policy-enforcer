@@ -8,18 +8,27 @@ import future.keywords.every
 
 # imports
 %s
-default allow = false
 
 # options
 %s
+
 # rules
 %s
 `
 
 // allowTemplate  main allow (option) template
 const allowTemplate = `
-allow {
+allows[output] {
 %s
+output := {"allow": true}
+}
+`
+
+const allowWithResourceTemplate = `
+allows[output] {
+resource := resources[_]
+%s
+output := {"id": resource.id, "type": resource.type, "allow": true}
 }
 `
 
