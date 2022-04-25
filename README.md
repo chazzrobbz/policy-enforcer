@@ -1,5 +1,5 @@
 
-<h1 align="center">
+<h1 align="center" style="border-bottom: 0">
   <img alt="policy enforcer logo" src="https://user-images.githubusercontent.com/39353278/165170342-d1d61da0-f464-48c5-a3df-6a9bf1d14aa2.png" width="250px"/><br/>
   Policy Enforcer
 </h1>
