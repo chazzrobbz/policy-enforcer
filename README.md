@@ -29,7 +29,7 @@ Import enforcer.
 import enforcer `github.com/Permify/policy-enforcer`
 ```
 
-## 🚲 Basic Usage
+## 🚀 Usage
 
 ```go
 var user = User{
@@ -44,14 +44,14 @@ var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is 
 var isSenior = enforcer.NewRule("user.tenure > 8").SetFailMessage("user is not senior")
 var isManager = enforcer.NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 
-enforcer.New()
+policy := enforcer.New()
     
 // set user object
-enforcer.Set("user", user)
+policy.Set("user", user)
 
 // its means the user must be either an admin or a senior manager
-enforcer.Option(isAdmin).Option(isSenior, isManager)
-   
+policy.Option(isAdmin).Option(isSenior, isManager)
+
 result, err := policy.IsAuthorized()
 ```
 
@@ -83,6 +83,151 @@ result, err := policy.IsAuthorized()
 }
 ```
 
+## 🚲 Multiple Resource Response
+
+You can check authorization of multiple resources at once.
+
+example scenario
+- If the user is admin, can edit all listed resources. (Admin)
+- If the user owns the resource, they can only edit their own resources. (Resource Owner)
+
+### Admin
+
+```go
+policy := enforcer.New()
+
+policy.SetUser(enforcer.User{
+    ID:    "1",
+    Roles: []string{"admin"}, // admin
+    Attributes: map[string]interface{}{
+        "tenure": 9,
+    },
+})
+
+policy.SetResources(
+    enforcer.Resource{
+        ID:   "1",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "1",
+        },
+    },
+    enforcer.Resource{
+        ID:   "2",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "2",
+        },
+    },
+)
+
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+var isResourceOwner = enforcer.NewRule("resource.attributes.owner_id == '1'")
+
+// its means the user must be either an admin or a resource owner
+policy.Option(isAdmin).Option(isResourceOwner)
+
+var r, err = policy.IsAuthorized()
+```
+
+```go
+{
+    Allows: {
+        {
+            Allow: true, // its true because user is admin
+            Meta: {
+                "type": "posts",
+                 "id": "1"
+            }
+        },
+        {
+            Allow: true, // its true because user is admin
+            Meta: {
+                "id": "2",
+                "type": "posts"
+            }
+        }
+    },
+    Details: {
+        {
+            Allow: true,
+            Key: "lgtemapezqleqyhyzryw",
+            Message: ""
+        }
+    }
+}
+```
+
+### Resource Owner
+
+```go
+policy := New()
+
+policy.SetUser(enforcer.User{
+    ID:    "1",
+    Roles: []string{"manager"},
+    Attributes: map[string]interface{}{
+        "tenure": 9,
+    },
+})
+
+policy.SetResources(
+    enforcer.Resource{
+        ID:   "1",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "1",
+        },
+    },
+    enforcer.Resource{
+        ID:   "2",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "2",
+        },
+    },
+)
+
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+var isResourceOwner = enforcer.NewRule("resource.attributes.owner_id == '1'")
+
+// its means the user must be either an admin or a resource owner
+policy.Option(isAdmin).Option(isResourceOwner)
+
+var r, err = policy.IsAuthorized()
+```
+
+### Output
+
+```go
+{
+    Allows: {
+        {
+            Allow: true, // its true because user is owner of the this resource
+            Meta: {
+                "type": "posts",
+                 "id": "1"
+            }
+        },
+        {
+            Allow: false,
+            Meta: {
+                "id": "2",
+                "type": "posts"
+            }
+        }
+    },
+    Details: {
+        {
+            Allow: false,
+            Key: "lgtemapezqleqyhyzryw",
+            Message: "user is not an admin"
+        }
+    }
+}
+```
+
+
 ## 🚨 Create New Rule
 
 the user should a manager role among their roles
@@ -111,13 +256,13 @@ var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is 
 ### Output
 
 ```go
-    Details: {
-        {
-            Allow: false, // result
-            Key: "xoeffrswxpldnjobcsnv",
-            Message: "user is not an admin" // when it fails the message will appear here
-        },
-    }
+Details: {
+    {
+        Allow: false, // result
+        Key: "xoeffrswxpldnjobcsnv",
+        Message: "user is not an admin" // when it fails the message will appear here
+    },
+}
 ```
 
 ### 🔑 Set Key
@@ -140,16 +285,120 @@ Details: {
 }
 ```
 
+## Options
+
+Options allow you to establish an ***or*** relationship between rules and create a more organized and legible authorization structure.
+
+```go
+// its means the user must be either an admin or a senior and manager
+enforcer.Option(isAdmin).Option(isSenior, isManager)
+```
 
 
+## To Rego Function
 
+You can export the rego policies you created with the code with this function.
 
+### Example 1
 
+```go
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
+var isSenior = enforcer.NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+var isManager = enforcer.NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 
+policy := enforcer.New()
 
+// its means the user must be either an admin or a senior manager
+policy.Option(isAdmin).Option(isSenior, isManager)
 
+fmt.Println(policy.ToRego())
+```
 
+### Output
+```
+package app.permify
 
+import future.keywords.every
+
+# imports
+import input.user as user
+
+# options
+allows[output] {
+  is_admin
+  output := {"allow": true}
+}
+
+allows[output] {
+  tcuaxhxkqfdafplsjfbc
+  xoeffrswxpldnjobcsnv
+  output := {"allow": true}
+}
+
+# rules
+
+tcuaxhxkqfdafplsjfbc {
+  user.attributes.tenure > 8
+}
+
+xoeffrswxpldnjobcsnv {
+  "manager" in user.roles
+}
+
+is_admin {
+  "admin" in user.roles
+}
+```
+
+### Example 2
+
+```go
+policy := enforcer.New()
+
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+var isResourceOwner = enforcer.NewRule("resource.attributes.owner_id == '1'")
+
+// its means the user must be either an admin or a resource owner
+policy.Option(isAdmin).Option(isResourceOwner)
+
+fmt.Println(policy.ToRego())
+```
+
+### Output
+
+```
+package app.permify
+
+import future.keywords.every
+
+# imports
+import input.user as user
+import input.resources as resources
+
+# options
+
+allows[output] {
+    resource := resources[_]
+    lgtemapezqleqyhyzryw
+    output := {"id": resource.id, "type": resource.type, "allow": true}
+}
+
+allows[output] {
+    resource := resources[_]
+    jjpjzpfrfegmotafeths(resource)
+    output := {"id": resource.id, "type": resource.type, "allow": true}
+}
+
+# rules
+
+lgtemapezqleqyhyzryw {
+    "admin" in user.roles
+}
+
+jjpjzpfrfegmotafeths(resource) {
+    resource.attributes.owner_id == "1"
+}
+```
 
 
 ## Need More, Check Out our API
