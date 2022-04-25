@@ -32,27 +32,27 @@ import enforcer `github.com/Permify/policy-enforcer`
 ## 🚲 Basic Usage
 
 ```go
-    var user = User{
-        ID:   1,
-        Roles:  []string{"admin"},
-        Attributes: map[string]interface{}{
+var user = User{
+    ID:   1,
+    Roles:  []string{"admin"},
+    Attributes: map[string]interface{}{
             "tenure": 8,
-        },
-    }
+    },
+}
 
-    var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
-    var isSenior = enforcer.NewRule("user.tenure > 8").SetFailMessage("user is not senior")
-    var isManager = enforcer.NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
+var isSenior = enforcer.NewRule("user.tenure > 8").SetFailMessage("user is not senior")
+var isManager = enforcer.NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 
-    enforcer.New()
+enforcer.New()
     
-    // set user object
-    enforcer.Set("user", user)
+// set user object
+enforcer.Set("user", user)
 
-    // its means the user must be either an admin or a senior manager
-    enforcer.Option(isAdmin).Option(isSenior, isManager)
+// its means the user must be either an admin or a senior manager
+enforcer.Option(isAdmin).Option(isSenior, isManager)
    
-    result, err := policy.IsAuthorized()
+result, err := policy.IsAuthorized()
 ```
 
 ### Output
@@ -83,7 +83,7 @@ import enforcer `github.com/Permify/policy-enforcer`
 }
 ```
 
-## Create New Rule
+## 🚨 Create New Rule
 
 the user should a manager role among their roles
 ```go
@@ -120,24 +120,24 @@ var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is 
     }
 ```
 
-### 🚀 Set Key
+### 🔑 Set Key
 
 You can use it when you do not want the key to be generated automatically. This will allow you to perceive your details better.
 
 ```go
-var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin").SetKey("is admin")
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetKey("is admin").SetFailMessage("user is not an admin")
 ```
 
 ### Output
 
 ```go
-    Details: {
-        {
-            Allow: true, // result
-            Key: "is_admin",
-            Message: "" // when true, the message does not appear
-        },
-    }
+Details: {
+    {
+        Allow: true, // result
+        Key: "is_admin",
+        Message: "" // when true, the message does not appear
+    },
+}
 ```
 
 
