@@ -70,14 +70,58 @@ func Test2(t *testing.T) {
 
 	policy.Option(isAdmin).Option(isResourceOwner)
 
-	r, err := policy.IsAuthorized()
+	result, err := policy.IsAuthorized()
 
 	assert.Equal(t, err, nil)
-	assert.Equal(t, r.Allows[0].Allow, true)
-	assert.Equal(t, r.Allows[1].Allow, false)
+	assert.Equal(t, result.Allows[0].Allow, true)
+	assert.Equal(t, result.Allows[1].Allow, false)
 }
 
 func Test3(t *testing.T) {
+
+	policy := New()
+
+	policy.SetUser(User{
+		ID:    "1",
+		Roles: []string{"admin"},
+		Attributes: map[string]interface{}{
+			"tenure": 9,
+		},
+	})
+
+	policy.SetResources(
+		Resource{
+			ID:   "1",
+			Type: "posts",
+			Attributes: map[string]interface{}{
+				"owner_id": "1",
+			},
+		},
+		Resource{
+			ID:   "2",
+			Type: "posts",
+			Attributes: map[string]interface{}{
+				"owner_id": "2",
+			},
+		},
+	)
+
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isResourceOwner := NewRule("resource.attributes.owner_id == '1'")
+
+	policy.Option(isAdmin).Option(isResourceOwner)
+
+	result, err := policy.IsAuthorized()
+
+	assert.Equal(t, err, nil)
+
+	for result.hasNext() {
+		allow := result.getNext()
+		assert.Equal(t, allow.Allow, true)
+	}
+}
+
+func Test4(t *testing.T) {
 	user := struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
@@ -101,7 +145,7 @@ func Test3(t *testing.T) {
 	assert.Equal(t, result.Allows[0].Allow, false)
 }
 
-func Test4(t *testing.T) {
+func Test5(t *testing.T) {
 	user := struct {
 		Name   string   `json:"name"`
 		Tenure int      `json:"tenure"`
@@ -126,7 +170,7 @@ func Test4(t *testing.T) {
 	assert.Equal(t, result.Allows[0].Allow, false)
 }
 
-func Test5(t *testing.T) {
+func Test6(t *testing.T) {
 	user := struct {
 		ID     int      `json:"id"`
 		Name   string   `json:"name"`
@@ -136,7 +180,7 @@ func Test5(t *testing.T) {
 		ID:     1,
 		Name:   "tolga",
 		Tenure: 9,
-		Roles:  []string{"admin"},
+		Roles:  []string{},
 	}
 
 	post := struct {
@@ -148,15 +192,13 @@ func Test5(t *testing.T) {
 	}
 
 	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
-	isSenior := NewRule("user.tenure > 8").SetFailMessage("user is not senior")
-	isManager := NewRule("'manager' in user.roles").SetFailMessage("user is not manager")
 	isResourceOwner := NewRule("post.owner_id == user.id").SetFailMessage("user is not owner of the post")
 
 	policy := New()
 	policy.Set("user", user)
 	policy.Set("post", post)
 
-	policy.Option(isAdmin).Option(isSenior, isManager).Option(isResourceOwner)
+	policy.Option(isAdmin).Option(isResourceOwner)
 
 	result, err := policy.IsAuthorized()
 	assert.Equal(t, err, nil)

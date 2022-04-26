@@ -2,6 +2,7 @@ package policy_enforcer
 
 // Result result */
 type Result struct {
+	index   int          `json:"-"`
 	Allows  []Allow      `json:"allows"`
 	Details []RuleResult `json:"details"`
 }
@@ -19,3 +20,20 @@ type RuleResult struct {
 	Message string `json:"message"`
 }
 
+// hasNext allows iterator */
+func (r *Result) hasNext() bool {
+	if r.index < len(r.Allows) {
+		return true
+	}
+	return false
+}
+
+// getNext allows iterator */
+func (r *Result) getNext() *Allow {
+	if r.hasNext() {
+		allow := r.Allows[r.index]
+		r.index++
+		return &allow
+	}
+	return nil
+}
