@@ -440,7 +440,7 @@ result, err := policy.IsAuthorized()
 
 for result.hasNext() {
     allow := result.getNext()
-	fmt.Sprintf("is authorized: %s",  allow.Allow)
+    fmt.Sprintf("is authorized: %s",  allow.Allow)
 }
 ```
 
