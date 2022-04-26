@@ -73,11 +73,7 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 		}, err
 	} else {
 		allow := Allow{
-			Allow: true,
-		}
-
-		if len(r["allows"].([]interface{})) == 0 {
-			allow.Allow = false
+			Allow: r["allow"].(bool),
 		}
 
 		return Result{
@@ -98,6 +94,11 @@ func (p *Policy) ToRego() string {
 		}
 	}
 
+	var defaults string
+	if p.Statement.Strategy == SINGLE {
+		defaults += fmt.Sprintf("default allow = false\n")
+	}
+
 	var imps string
 	for _, imp := range p.Statement.Imports {
 		imps += fmt.Sprintf("import input.%s as %s\n", imp, imp)
@@ -108,7 +109,7 @@ func (p *Policy) ToRego() string {
 		rules = append(rules, rule)
 	}
 
-	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, raw, strings.Join(Rules(rules).Evacuations(), ""))
+	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, defaults, raw, strings.Join(Rules(rules).Evacuations(), ""))
 }
 
 // Compare */

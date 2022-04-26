@@ -9,6 +9,9 @@ import future.keywords.every
 # imports
 %s
 
+# defaults
+%s
+
 # options
 %s
 
@@ -18,9 +21,8 @@ import future.keywords.every
 
 // allowTemplate  main allow (option) template
 const allowTemplate = `
-allows[output] {
+allow {
 %s
-output := {"allow": true}
 }
 `
 
