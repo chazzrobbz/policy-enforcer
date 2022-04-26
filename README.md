@@ -1,5 +1,5 @@
 
-<h1 align="center" style="border-bottom: 0">
+<h1 align="center">
   <img alt="policy enforcer logo" src="https://user-images.githubusercontent.com/39353278/165170342-d1d61da0-f464-48c5-a3df-6a9bf1d14aa2.png" width="250px"/><br/>
   Policy Enforcer
 </h1>
@@ -7,9 +7,8 @@
 <p align="center">Represent your rego rules programmatically.</p>
 
 <p align="center"><a href="https://pkg.go.dev/github.com/Permify/policy-enforcer?tab=doc" 
-target="_blank"></a><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" />&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" />&nbsp;&nbsp;<img src="https://img.shields.io/github/license/Permify/policy-enforcer?style=for-the-badge" alt="license" /></p>
+target="_blank"></a><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" />&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" />&nbsp;&nbsp;<img src="https://img.shields.io/github/license/Permify/policy-enforcer?style=for-the-badge" alt="license" />&nbsp;&nbsp;<img src="https://img.shields.io/github/last-commit/Permify/policy-enforcer?style=for-the-badge" alt="tweet" />&nbsp;&nbsp;<img src="https://img.shields.io/twitter/url?style=for-the-badge&url=https%3A%2F%2Ftwitter.com%2Fgetpermify" alt="tweet" /></p>
 
----
 
 Policy enforcer is a open source tool that allows you to easily create complex rego.
 
