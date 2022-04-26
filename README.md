@@ -343,7 +343,7 @@ fmt.Println(policy.ToRego())
 
 ### Output
 
-```go
+```
 package app.permify
 
 import future.keywords.every
@@ -396,7 +396,7 @@ fmt.Println(policy.ToRego())
 
 ### Output
 
-```rego
+```
 package app.permify
 
 import future.keywords.every
