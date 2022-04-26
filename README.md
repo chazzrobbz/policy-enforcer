@@ -4,23 +4,25 @@
   Policy Enforcer
 </h1>
 
-<p align="center">Represent your rego rules programmatically.</p>
+<p align="center">Policy enforcer is a open source tool that allows you to easily create complex rego.</p>
 
 <p align="center"><a href="https://pkg.go.dev/github.com/Permify/policy-enforcer?tab=doc" 
 target="_blank"></a><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" />&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" />&nbsp;&nbsp;<img src="https://img.shields.io/github/license/Permify/policy-enforcer?style=for-the-badge" alt="license" />&nbsp;&nbsp;<img src="https://img.shields.io/github/last-commit/Permify/policy-enforcer?style=for-the-badge" alt="tweet" />&nbsp;&nbsp;<img src="https://img.shields.io/twitter/url?style=for-the-badge&url=https%3A%2F%2Ftwitter.com%2Fgetpermify" alt="tweet" /></p>
 
+Set up a complex system for your authorizations without learning rego.
 
-Policy enforcer is a open source tool that allows you to easily create complex rego.
+Represent your rego programmatically and easly export it.
 
 > Rego is the policy language for defining rules that are evaluated by the OPA (Open Policy Agent) engine.
 
 ## Features
 
-- Generate your complex authorization easily with code.
-- Export the rego you created with the code.
-- Make decisions about multiple resources from one policy.
-- Get the details of the decisions made.
-- Add custom messages and handle decision messages.
+- [x] Generate your complex authorization easily with code.
+- [x] Export the rego you created with the code.
+- [x] Make decisions about multiple resources from one policy.
+- [x] Get the details of the decisions made.
+- [x] Add custom messages and handle decision messages.
+
 
 ## 👇 Setup
 
@@ -340,24 +342,27 @@ fmt.Println(policy.ToRego())
 ```
 
 ### Output
-```
+
+```go
 package app.permify
 
 import future.keywords.every
 
 # imports
+
 import input.user as user
 
+default allow = false
+
 # options
-allows[output] {
+
+allow {
   is_admin
-  output := {"allow": true}
 }
 
-allows[output] {
+allow {
   tcuaxhxkqfdafplsjfbc
   xoeffrswxpldnjobcsnv
-  output := {"allow": true}
 }
 
 # rules
@@ -391,7 +396,7 @@ fmt.Println(policy.ToRego())
 
 ### Output
 
-```
+```rego
 package app.permify
 
 import future.keywords.every
@@ -422,6 +427,20 @@ lgtemapezqleqyhyzryw {
 
 jjpjzpfrfegmotafeths(resource) {
     resource.attributes.owner_id == "1"
+}
+```
+
+
+## Iterator
+
+You can review allow and meta with iterator
+
+```go
+result, err := policy.IsAuthorized()
+
+for result.hasNext() {
+    allow := result.getNext()
+	fmt.Sprintf("is authorized: %s",  allow.Allow)
 }
 ```
 
