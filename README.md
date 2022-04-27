@@ -237,7 +237,7 @@ var r, err = policy.IsAuthorized()
             }
         },
         {
-            Allow: false,
+            Allow: false, // its false because user is not owner of the this resource
             Meta: {
                 "id": "2",
                 "type": "posts"
@@ -462,13 +462,13 @@ import input.resources as resources
 allows[output] {
     resource := resources[_]
     lgtemapezqleqyhyzryw
-    output := {"id": resource.id, "type": resource.type, "allow": true}
+    output := {"id": resource.id, "type": resource.type}
 }
 
 allows[output] {
     resource := resources[_]
     jjpjzpfrfegmotafeths(resource)
-    output := {"id": resource.id, "type": resource.type, "allow": true}
+    output := {"id": resource.id, "type": resource.type}
 }
 
 # rules
