@@ -52,7 +52,8 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	}
 
 	if p.Statement.Strategy == MULTIPLE {
-		var allowedResources []Resource
+
+		var allowedResources []map[string]string
 
 		var data []byte
 		data, err = json.Marshal(r["allows"])
@@ -71,7 +72,9 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 			Allows:  compare(p.Statement.Resources, allowedResources),
 			Details: results,
 		}, err
+
 	} else {
+
 		allow := Allow{
 			Allow: r["allow"].(bool),
 		}
@@ -80,6 +83,51 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 			Allows:  []Allow{allow},
 			Details: results,
 		}, err
+
+	}
+}
+
+// IsAuthorized It creates a decision about whether the inputs you give comply with the rules you write and a result about the reason
+// @return Result, error
+func (p *Policy) AuthorizedResources() (resources []Resource, err error) {
+	var query rego.PreparedEvalQuery
+	query, err = rego.New(
+		rego.Query(fmt.Sprintf("r = data.%s", p.Statement.Package)),
+		rego.Module("permify.rego", p.ToRego()),
+	).PrepareForEval(p.Statement.Context)
+	if err != nil {
+		p.Error = err
+		return
+	}
+
+	var resultSet rego.ResultSet
+	resultSet, err = query.Eval(p.Statement.Context, rego.EvalInput(p.Statement.Inputs))
+	if err != nil {
+		p.Error = err
+		return
+	}
+
+	r := resultSet[0].Bindings["r"].(map[string]interface{})
+
+	if p.Statement.Strategy == MULTIPLE {
+		var allowedResources []map[string]string
+
+		var data []byte
+		data, err = json.Marshal(r["allows"])
+		if err != nil {
+			p.Error = err
+			return
+		}
+
+		err = json.Unmarshal(data, &allowedResources)
+		if err != nil {
+			p.Error = err
+			return
+		}
+
+		return fill(p.Statement.Resources, allowedResources), nil
+	} else {
+		return []Resource{}, nil
 	}
 }
 
@@ -113,10 +161,10 @@ func (p *Policy) ToRego() string {
 }
 
 // Compare */
-func compare(allResources []Resource, allowedResources []Resource) (allows []Allow) {
+func compare(allResources []Resource, allowedResourcesMap []map[string]string) (allows []Allow) {
 	allowedMap := map[string]bool{}
-	for _, allowedResource := range allowedResources {
-		allowedMap[allowedResource.Type+":"+allowedResource.ID] = true
+	for _, r := range allowedResourcesMap {
+		allowedMap[r["type"]+":"+r["id"]] = true
 	}
 	for _, resource := range allResources {
 		if allowedMap[resource.Type+":"+resource.ID] {
@@ -135,6 +183,20 @@ func compare(allResources []Resource, allowedResources []Resource) (allows []All
 					"type": resource.Type,
 				},
 			})
+		}
+	}
+	return
+}
+
+// Compare */
+func fill(allResources []Resource, allowedResourcesMap []map[string]string) (resources []Resource) {
+	allowedMap := map[string]bool{}
+	for _, r := range allowedResourcesMap {
+		allowedMap[r["type"]+":"+r["id"]] = true
+	}
+	for _, resource := range allResources {
+		if allowedMap[resource.Type+":"+resource.ID] {
+			resources = append(resources, resource)
 		}
 	}
 	return

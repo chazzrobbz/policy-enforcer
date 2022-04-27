@@ -20,9 +20,9 @@ Represent your rego programmatically and easly export it.
 - [x] Generate your complex authorization easily with code.
 - [x] Export the rego you created with the code.
 - [x] Make decisions about multiple resources from one policy.
+- [x] Filter data based on your authorization logic.
 - [x] Get the details of the decisions made.
 - [x] Add custom messages and handle decision messages.
-
 
 ## 👇 Setup
 
@@ -163,8 +163,8 @@ var r, err = policy.IsAuthorized()
         {
             Allow: true, // its true because user is admin
             Meta: {
-                 "id": "1"
-				 "type": "posts",
+                "id": "1"
+                "type": "posts",
             }
         },
         {
@@ -232,7 +232,7 @@ var r, err = policy.IsAuthorized()
         {
             Allow: true, // its true because user is owner of the this resource
             Meta: {
-		        "id": "1"
+                "id": "1"
                 "type": "posts",
             }
         },
@@ -249,6 +249,58 @@ var r, err = policy.IsAuthorized()
             Allow: false,
             Key: "lgtemapezqleqyhyzryw",
             Message: "user is not an admin"
+        }
+    }
+}
+```
+
+## Data Filtering
+
+```go
+policy := New()
+
+policy.SetUser(enforcer.User{
+    ID:    "1",
+    Roles: []string{"manager"},
+    Attributes: map[string]interface{}{
+        "tenure": 9,
+    },
+})
+
+policy.SetResources(
+    enforcer.Resource{
+        ID:   "1",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "1",
+        },
+    },
+    enforcer.Resource{
+        ID:   "2",
+        Type: "posts",
+        Attributes: map[string]interface{}{
+            "owner_id": "2",
+        },
+    },
+)
+
+var isAdmin = enforcer.NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+var isResourceOwner = enforcer.NewRule("resource.attributes.owner_id == '1'")
+
+// its means the user must be either an admin or a resource owner
+policy.Option(isAdmin).Option(isResourceOwner)
+
+resources, err := policy.AuthorizedResources()
+```
+
+### Output
+```
+{
+    {
+        ID: "1",
+        Type: "posts",
+        Attributes: {
+            "owner_id": "1"
         }
     }
 }

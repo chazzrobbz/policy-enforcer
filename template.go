@@ -30,7 +30,7 @@ const allowWithResourceTemplate = `
 allows[output] {
 resource := resources[_]
 %s
-output := {"id": resource.id, "type": resource.type, "allow": true}
+output := {"id": resource.id, "type": resource.type}
 }
 `
 

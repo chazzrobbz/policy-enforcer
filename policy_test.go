@@ -204,3 +204,42 @@ func Test6(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, result.Allows[0].Allow, true)
 }
+
+func Test7(t *testing.T) {
+
+	policy := New()
+
+	policy.SetUser(User{
+		ID:    "1",
+		Roles: []string{"manager"},
+		Attributes: map[string]interface{}{
+			"tenure": 9,
+		},
+	})
+
+	policy.SetResources(
+		Resource{
+			ID:   "1",
+			Type: "posts",
+			Attributes: map[string]interface{}{
+				"owner_id": "1",
+			},
+		},
+		Resource{
+			ID:   "2",
+			Type: "posts",
+			Attributes: map[string]interface{}{
+				"owner_id": "2",
+			},
+		},
+	)
+
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+	isResourceOwner := NewRule("resource.attributes.owner_id == '1'")
+
+	policy.Option(isAdmin).Option(isResourceOwner)
+
+	resources, err := policy.AuthorizedResources()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(resources), 1)
+}
