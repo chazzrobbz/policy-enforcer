@@ -4,23 +4,17 @@
   Policy Enforcer
 </h1>
 
-<p align="center">Policy enforcer is a open source tool that allows you to easily create complex rego.</p>
+<p align="center">Policy enforcer is a open source tool that allows you to easily create complex authorization policy. Supports RBAC, ABAC and resource filtering based on them.</p>
 
 <p align="center"><a href="https://pkg.go.dev/github.com/Permify/policy-enforcer?tab=doc" 
 target="_blank"></a><img src="https://img.shields.io/badge/Go-1.17+-00ADD8?style=for-the-badge&logo=go" alt="go version" />&nbsp;&nbsp;<img src="https://img.shields.io/badge/Go_report-A+-success?style=for-the-badge&logo=none" alt="go report" />&nbsp;&nbsp;<img src="https://img.shields.io/github/license/Permify/policy-enforcer?style=for-the-badge" alt="license" />&nbsp;&nbsp;<img src="https://img.shields.io/github/last-commit/Permify/policy-enforcer?style=for-the-badge" alt="tweet" />&nbsp;&nbsp;<img src="https://img.shields.io/twitter/url?style=for-the-badge&url=https%3A%2F%2Ftwitter.com%2Fgetpermify" alt="tweet" /></p>
 
-Set up a complex system for your authorizations without learning rego.
-
-Represent your rego programmatically and easly export it.
-
-> Rego is the policy language for defining rules that are evaluated by the OPA (Open Policy Agent) engine.
-
 ## Features
 
-- [x] Generate your complex authorization easily with code.
-- [x] Export the rego you created with the code.
-- [x] Make decisions about multiple resources from one policy.
+- [x] Generate your complex authorization policy easily with code.
+- [x] Export the rego (policy language for defining rules that are evaluated by the OPA engine) you created with the code.
 - [x] Filter data based on your authorization logic.
+- [x] Make decisions about multiple resources from one policy.
 - [x] Get the details of the decisions made.
 - [x] Add custom messages and handle decision messages.
 
@@ -255,6 +249,11 @@ var r, err = policy.IsAuthorized()
 ```
 
 ## Data Filtering
+
+Filter resources that match the rules you created
+
+example scenario
+- User can only edit their own posts. Fetch all of the posts it can edit
 
 ```go
 policy := New()
