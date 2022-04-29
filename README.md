@@ -1,6 +1,6 @@
 
 <h1 align="center">
-  <img alt="policy enforcer logo" src="https://user-images.githubusercontent.com/39353278/165170342-d1d61da0-f464-48c5-a3df-6a9bf1d14aa2.png" width="250px"/><br/>
+  <img alt="policy enforcer logo" src="https://user-images.githubusercontent.com/39353278/165986338-50578f5c-7c46-4ca6-a2a3-1aef426c5980.png" width="600px"/><br/>
   Policy Enforcer
 </h1>
 
