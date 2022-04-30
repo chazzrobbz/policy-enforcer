@@ -249,7 +249,7 @@ var r, err = policy.IsAuthorized()
 }
 ```
 
-## Data Filtering
+## 🍃 Data Filtering
 
 Filter resources that match the rules you created
 
