@@ -39,9 +39,10 @@ func NewRule(conditions ...string) Rule {
 // @return Rule
 func (r Rule) SetFailMessage(message string) Rule {
 	return Rule{
-		Key:         r.Key,
-		Conditions:  r.Conditions,
-		FailMessage: errors.New(message),
+		Key:              r.Key,
+		Conditions:       r.Conditions,
+		FailMessage:      errors.New(message),
+		ContainsResource: r.ContainsResource,
 	}
 }
 
@@ -50,9 +51,10 @@ func (r Rule) SetFailMessage(message string) Rule {
 // @return Rule
 func (r Rule) SetKey(key string) Rule {
 	return Rule{
-		Key:         Key(key),
-		Conditions:  r.Conditions,
-		FailMessage: r.FailMessage,
+		Key:              Key(key),
+		Conditions:       r.Conditions,
+		FailMessage:      r.FailMessage,
+		ContainsResource: r.ContainsResource,
 	}
 }
 
@@ -122,7 +124,7 @@ func (c Rules) Len() (length int64) {
 
 // Titles returns an array of the rule array's keys.
 // @return []String
-func (c Rules) Titles() (keys []string) {
+func (c Rules) Heads() (keys []string) {
 	keys = []string{}
 	for _, o := range c {
 		keys = append(keys, o.GetHead())

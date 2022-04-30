@@ -138,7 +138,7 @@ func (p *Policy) ToRego() string {
 
 	for _, option := range p.Statement.Options {
 		if Rules(option.Rules).Len() > 0 {
-			raw += fmt.Sprintf(option.GetTemplate(p.Statement.Strategy), strings.Join(Rules(option.Rules).Titles(), "\n"))
+			raw += fmt.Sprintf(option.GetTemplate(p.Statement.Strategy), strings.Join(Rules(option.Rules).Heads(), "\n"))
 		}
 	}
 
