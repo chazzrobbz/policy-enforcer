@@ -40,3 +40,16 @@ const ruleTemplate = `
 %s
 }
 `
+
+// validationTemplate
+const validationTemplate = `
+package validate
+
+import future.keywords.every
+
+default validate = false
+
+validate {
+	%s
+}
+`

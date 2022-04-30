@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/open-policy-agent/opa/rego"
 )
 
 type Rule struct {
@@ -54,14 +56,21 @@ func (r Rule) SetKey(key string) Rule {
 	}
 }
 
-// GetTitle
+// GetHead
 // @param string
 // @return string
-func (r Rule) GetTitle() string {
+func (r Rule) GetHead() string {
 	if r.ContainsResource {
 		return fmt.Sprintf("%s(resource)", r.Key)
 	}
 	return r.Key
+}
+
+// GetHead
+// @param string
+// @return string
+func (r Rule) GetBody() string {
+	return strings.Join(r.Conditions, "\n")
 }
 
 // GetTemplate
@@ -71,11 +80,27 @@ func (r Rule) GetTemplate() string {
 	return ruleTemplate
 }
 
+// Validate
+// @return error
+func (r Rule) Validate() error {
+	_, err := rego.New(
+		rego.Query("r = data.validate"),
+		rego.Module("permify.rego", fmt.Sprintf(validationTemplate, r.GetBody())),
+	).PrepareForEval(nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "rego_unsafe_var_error") {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 // Evict
 // @param string
 // @return string
 func (r Rule) Evict() string {
-	return fmt.Sprintf(r.GetTemplate(), r.GetTitle(), strings.Join(r.Conditions, "\n"))
+	return fmt.Sprintf(r.GetTemplate(), r.GetHead(), r.GetBody())
 }
 
 // Collection
@@ -100,7 +125,7 @@ func (c Rules) Len() (length int64) {
 func (c Rules) Titles() (keys []string) {
 	keys = []string{}
 	for _, o := range c {
-		keys = append(keys, o.GetTitle())
+		keys = append(keys, o.GetHead())
 	}
 	return
 }

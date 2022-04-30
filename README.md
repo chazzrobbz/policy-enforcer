@@ -484,7 +484,7 @@ jjpjzpfrfegmotafeths(resource) {
 
 ## Iterator
 
-You can review allow and meta with iterator
+You can review allow and meta with iterator.
 
 ```go
 result, err := policy.IsAuthorized()
@@ -495,6 +495,13 @@ for result.hasNext() {
 }
 ```
 
+## Validate
+
+Validate your rules and debug.
+
+```go
+err := NewRule("'admin i user.roles").Validate() // return error
+```
 
 ## Need More, Check Out our API
 

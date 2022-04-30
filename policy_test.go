@@ -243,3 +243,21 @@ func Test7(t *testing.T) {
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(resources), 1)
 }
+
+func Test8(t *testing.T) {
+
+	var err error
+	isAdmin := NewRule("'admin' in user.roles")
+	isResourceOwner := NewRule("resource.attributes.owner_id == '1'")
+
+	err = isAdmin.Validate()
+	assert.Equal(t, err, nil)
+
+	err = isResourceOwner.Validate()
+	assert.Equal(t, err, nil)
+}
+
+func Test9(t *testing.T) {
+	err := NewRule("'admin i user.roles").Validate()
+	assert.NotEmpty(t, err)
+}
