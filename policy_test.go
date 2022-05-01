@@ -245,7 +245,6 @@ func Test7(t *testing.T) {
 }
 
 func Test8(t *testing.T) {
-
 	var err error
 	isAdmin := NewRule("'admin' in user.roles")
 	isResourceOwner := NewRule("resource.attributes.owner_id == '1'")
@@ -260,4 +259,26 @@ func Test8(t *testing.T) {
 func Test9(t *testing.T) {
 	err := NewRule("'admin i user.roles").Validate()
 	assert.NotEmpty(t, err)
+}
+
+func Test10(t *testing.T) {
+	policy := New()
+
+	policy.SetUser(User{
+		ID:    "1",
+		Roles: []string{"admin"},
+		Attributes: map[string]interface{}{
+			"tenure": 9,
+		},
+	})
+
+	policy.SetResources()
+
+	isAdmin := NewRule("'admin' in user.roles").SetFailMessage("user is not an admin")
+
+	policy.Option(isAdmin).Option()
+
+	result, err := policy.IsAuthorized()
+	assert.Equal(t, err, nil)
+	assert.Equal(t, result.Allows[0].Allow, true)
 }

@@ -32,12 +32,15 @@ func (p *Policy) SetUser(user User) (policy *Policy) {
 // @param interface{}
 // @return *Policy
 func (p *Policy) SetResources(resources ...Resource) (policy *Policy) {
-	policy = p.getInstance()
-	policy.Statement.Resources = resources
-	var mp []map[string]interface{}
-	mp, p.Error = ToMapArray(resources)
-	policy.Statement.Imports = append(policy.Statement.Imports, "resources")
-	policy.Statement.Inputs["resources"] = mp
+	if len(resources) > 0 {
+		policy = p.getInstance()
+		policy.Statement.Resources = resources
+		var mp []map[string]interface{}
+		mp, p.Error = ToMapArray(resources)
+		policy.Statement.Imports = append(policy.Statement.Imports, "resources")
+		policy.Statement.Inputs["resources"] = mp
+		p.setStrategy(MULTIPLE)
+	}
 	return
 }
 
@@ -46,17 +49,14 @@ func (p *Policy) SetResources(resources ...Resource) (policy *Policy) {
 // @param ...Rule
 // @return *Policy
 func (p *Policy) Option(rules ...Rule) (policy *Policy) {
-	policy = p.getInstance()
-	for _, rule := range rules {
-		if rule.ContainsResource {
-			p.setStrategy(MULTIPLE)
+	if len(rules) > 0 {
+		policy = p.getInstance()
+		policy.Statement.Options = append(policy.Statement.Options, Option{
+			Rules: rules,
+		})
+		for _, rule := range rules {
+			policy.Statement.Rules[rule.Key] = rule
 		}
-	}
-	policy.Statement.Options = append(policy.Statement.Options, Option{
-		Rules: rules,
-	})
-	for _, rule := range rules {
-		policy.Statement.Rules[rule.Key] = rule
 	}
 	return
 }

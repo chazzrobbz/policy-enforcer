@@ -9,10 +9,9 @@ import (
 )
 
 type Rule struct {
-	Key              string
-	ContainsResource bool
-	FailMessage      error
-	Conditions       []string
+	Key         string
+	FailMessage error
+	Conditions  []string
 }
 
 // NewRule creates a new rule
@@ -21,16 +20,14 @@ type Rule struct {
 // @return Rule
 func NewRule(conditions ...string) Rule {
 	var cn []string
-	containsResource := false
 	for _, con := range conditions {
 		condition := CleanCondition(con)
-		containsResource = strings.Contains(condition, "resource.")
 		cn = append(cn, condition)
 	}
 	return Rule{
-		Key:              GenerateLowerCaseRandomString(20),
-		ContainsResource: containsResource,
-		Conditions:       cn,
+		Key:         GenerateLowerCaseRandomString(20),
+		FailMessage: errors.New(""),
+		Conditions:  cn,
 	}
 }
 
@@ -39,10 +36,9 @@ func NewRule(conditions ...string) Rule {
 // @return Rule
 func (r Rule) SetFailMessage(message string) Rule {
 	return Rule{
-		Key:              r.Key,
-		Conditions:       r.Conditions,
-		FailMessage:      errors.New(message),
-		ContainsResource: r.ContainsResource,
+		Key:         r.Key,
+		Conditions:  r.Conditions,
+		FailMessage: errors.New(message),
 	}
 }
 
@@ -51,24 +47,27 @@ func (r Rule) SetFailMessage(message string) Rule {
 // @return Rule
 func (r Rule) SetKey(key string) Rule {
 	return Rule{
-		Key:              Key(key),
-		Conditions:       r.Conditions,
-		FailMessage:      r.FailMessage,
-		ContainsResource: r.ContainsResource,
+		Key:         Key(key),
+		Conditions:  r.Conditions,
+		FailMessage: r.FailMessage,
 	}
 }
 
 // GetHead
 // @param string
 // @return string
-func (r Rule) GetHead() string {
-	if r.ContainsResource {
+func (r Rule) GetHead(s Strategy) string {
+	switch s {
+	case MULTIPLE:
 		return fmt.Sprintf("%s(resource)", r.Key)
+	case SINGLE:
+		return r.Key
+	default:
+		return r.Key
 	}
-	return r.Key
 }
 
-// GetHead
+// GetBody
 // @param string
 // @return string
 func (r Rule) GetBody() string {
@@ -87,7 +86,7 @@ func (r Rule) GetTemplate() string {
 func (r Rule) Validate() error {
 	_, err := rego.New(
 		rego.Query("r = data.validate"),
-		rego.Module("permify.rego", fmt.Sprintf(validationTemplate, r.GetBody())),
+		rego.Module("validation.rego", fmt.Sprintf(validationTemplate, r.GetBody())),
 	).PrepareForEval(nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "rego_unsafe_var_error") {
@@ -101,8 +100,8 @@ func (r Rule) Validate() error {
 // Evict
 // @param string
 // @return string
-func (r Rule) Evict() string {
-	return fmt.Sprintf(r.GetTemplate(), r.GetHead(), r.GetBody())
+func (r Rule) Evict(s Strategy) string {
+	return fmt.Sprintf(r.GetTemplate(), r.GetHead(s), r.GetBody())
 }
 
 // Collection
@@ -122,22 +121,22 @@ func (c Rules) Len() (length int64) {
 	return int64(len(c))
 }
 
-// Titles returns an array of the rule array's keys.
+// Heads returns an array of the rule array's heads.
 // @return []String
-func (c Rules) Heads() (keys []string) {
+func (c Rules) Heads(s Strategy) (keys []string) {
 	keys = []string{}
 	for _, o := range c {
-		keys = append(keys, o.GetHead())
+		keys = append(keys, o.GetHead(s))
 	}
 	return
 }
 
 // Evacuations returns an array of the rule array's raws.
 // @return []String
-func (c Rules) Evacuations() (evacuations []string) {
+func (c Rules) Evacuations(s Strategy) (evacuations []string) {
 	evacuations = []string{}
 	for _, o := range c {
-		evacuations = append(evacuations, o.Evict())
+		evacuations = append(evacuations, o.Evict(s))
 	}
 	return
 }

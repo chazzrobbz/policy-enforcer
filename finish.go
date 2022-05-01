@@ -33,21 +33,19 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	var results []RuleResult
 
 	for key, rule := range p.Statement.Rules {
-		if !rule.ContainsResource {
-			_, ok := r[rule.Key].(bool)
-			if ok {
-				results = append(results, RuleResult{
-					Allow:   true,
-					Key:     key,
-					Message: "",
-				})
-			} else {
-				results = append(results, RuleResult{
-					Allow:   false,
-					Key:     key,
-					Message: rule.FailMessage.Error(),
-				})
-			}
+		_, ok := r[rule.Key].(bool)
+		if ok {
+			results = append(results, RuleResult{
+				Allow:   true,
+				Key:     key,
+				Message: "",
+			})
+		} else {
+			results = append(results, RuleResult{
+				Allow:   false,
+				Key:     key,
+				Message: rule.FailMessage.Error(),
+			})
 		}
 	}
 
@@ -87,7 +85,7 @@ func (p *Policy) IsAuthorized() (result Result, err error) {
 	}
 }
 
-// IsAuthorized It creates a decision about whether the inputs you give comply with the rules you write and a result about the reason
+// AuthorizedResources .
 // @return Result, error
 func (p *Policy) AuthorizedResources() (resources []Resource, err error) {
 	var query rego.PreparedEvalQuery
@@ -138,7 +136,7 @@ func (p *Policy) ToRego() string {
 
 	for _, option := range p.Statement.Options {
 		if Rules(option.Rules).Len() > 0 {
-			raw += fmt.Sprintf(option.GetTemplate(p.Statement.Strategy), strings.Join(Rules(option.Rules).Heads(), "\n"))
+			raw += fmt.Sprintf(option.GetTemplate(p.Statement.Strategy), strings.Join(Rules(option.Rules).Heads(p.Statement.Strategy), "\n"))
 		}
 	}
 
@@ -157,7 +155,7 @@ func (p *Policy) ToRego() string {
 		rules = append(rules, rule)
 	}
 
-	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, defaults, raw, strings.Join(Rules(rules).Evacuations(), ""))
+	return fmt.Sprintf(policyTemplate, p.Statement.Package, imps, defaults, raw, strings.Join(Rules(rules).Evacuations(p.Statement.Strategy), ""))
 }
 
 // Compare */
